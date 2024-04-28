@@ -1,8 +1,10 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from PIL import Image
 import logging
 import numpy as np
+import matplotlib.pyplot as plt
+import csv
 from tqdm import tqdm
 import torch
 from torch.utils.data import TensorDataset, DataLoader
@@ -10,12 +12,15 @@ from siren import SIREN
 from utils import set_logger
 
 SAMPLING_RATIO = 0.1
+#original 8192
 BATCH_SIZE = 8192
-EPOCHS = 5000
+EPOCHS = 1
 LEARNING_RATE = 0.0005
 
+filename = 'celtic_spiral_knot.jpg'
+
 # Image Reference - http://earthsongtiles.com/celtic_tiles.html
-img_filepath = 'data/celtic_spiral_knot.jpg'
+img_filepath = 'data/' + filename
 img_raw = np.array(Image.open(img_filepath))
 img_ground_truth = torch.from_numpy(img_raw).float()
 
@@ -49,6 +54,7 @@ train_dataloader = DataLoader(
 # Build model
 layers = [256, 256, 256, 256, 256]
 in_features = 2
+# Ben changed out_features from 3 to 4 don't know why but that fixed it lmao
 out_features = 3
 initializer = 'siren'
 w0 = 1.0
@@ -69,6 +75,7 @@ print("Total training steps : ", num_steps)
 #   0.0005, decay_steps=num_steps, end_learning_rate=5e-5, power=2.0)
 # TODO: tensorboard
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 criterion = torch.nn.MSELoss()
 
@@ -84,7 +91,11 @@ if not os.path.exists(logdir):
 
 set_logger(os.path.join(logdir, 'train.log'))
 
+epoch_losses = []
+epoch_improvements = []
 best_loss = np.inf
+
+before = datetime.now()
 
 for epoch in range(EPOCHS):
     iterator = tqdm(train_dataloader, dynamic_ncols=True)
@@ -105,12 +116,53 @@ for epoch in range(EPOCHS):
             "Epoch: {} | Loss {:.4f}".format(epoch, loss), refresh=True)
 
     avg_loss = torch.mean(torch.cat(losses)).item()
+    epoch_losses.append([epoch, avg_loss])
     logging.info("Epoch: {} | Avg. Loss {:.4f}".format(epoch, avg_loss))
 
     if avg_loss < best_loss:
         logging.info('Loss improved from {:.4f} to {:.4f}'.format(
             best_loss, avg_loss))
         best_loss = avg_loss
+        epoch_improvements.append([epoch,best_loss])
         torch.save(
             {'network': model.state_dict()},
             os.path.join(checkpoint_dir + 'model'))
+
+complete = datetime.now()
+dif = complete - before
+before_str = before.strftime("%H:%M:%S")
+logging.info('Started at: ' + before_str)
+complete_str = complete.strftime("%H:%M:%S")
+logging.info('Completed at: ' + complete_str)
+logging.info('Total time: ' + str(dif.seconds//3600) + ':' + str((dif.seconds//60) % 60) + ":" + str(dif.seconds%60))
+
+
+with open('metrics/'+filename+' - avg losses.csv','w+') as losses_file:
+    writer = csv.writer(losses_file)
+    writer.writerows(epoch_losses)
+
+with open('metrics/'+filename+' - improvements.csv','w+') as improvements_file:
+    writer = csv.writer(improvements_file)
+    writer.writerows(epoch_improvements)
+
+epoch_losses = np.array(epoch_losses)
+plt.figure(0)
+x,y = epoch_losses.T
+plt.plot(x,y)
+plt.title("Epoch vs Avg. Loss")
+plt.xlabel("Epoch")
+plt.ylabel("Avg. Loss")
+plt.savefig('metrics/'+(filename.split('.')[0])+' - plot of losses')
+
+epoch_improvements= np.array(epoch_improvements)
+plt.figure(1)
+x,y = epoch_improvements.T
+plt.plot(x,y)
+plt.title("Epoch vs Avg. Loss")
+plt.xlabel("Epoch")
+plt.ylabel("Avg. Loss")
+plt.savefig('metrics/'+(filename.split('.')[0])+' - plot of improvement')
+
+
+
+
