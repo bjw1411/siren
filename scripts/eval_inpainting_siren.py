@@ -37,8 +37,8 @@ def build_eval_tensors():
     #changed to -1 4 from -1 3
     img_eval = img_ground_truth.reshape(-1, 3)
 
-    img_mask.to(device="cuda")
-    img_eval.to(device="cuda")
+    # img_mask.to(device="cuda")
+    # img_eval.to(device="cuda")
     return img_mask, img_eval
 
 

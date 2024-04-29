@@ -13,6 +13,7 @@ events.out.tfevents.*
 *.json
 *.yml
 *.pkl
+*.csv
 logs/
 *.h5
 *.onnx

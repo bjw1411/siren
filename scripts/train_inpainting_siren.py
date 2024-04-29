@@ -14,7 +14,7 @@ from utils import set_logger
 SAMPLING_RATIO = 0.1
 #original 8192
 BATCH_SIZE = 8192
-EPOCHS = 100
+EPOCHS = 500
 LEARNING_RATE = 0.0005
 
 filename = 'celtic_spiral_knot.jpg'
@@ -135,6 +135,7 @@ complete_str = complete.strftime("%H:%M:%S")
 logging.info('Completed at: ' + complete_str)
 logging.info('Total time: ' + str(dif.seconds//3600) + ':' + str((dif.seconds//60) % 60) + ":" + str(dif.seconds%60))
 
+torch.save(model.state_dict(), "saved models/"+filename+" model.pt")
 
 with open('metrics/'+filename+' - avg losses.csv','w+') as losses_file:
     writer = csv.writer(losses_file)
