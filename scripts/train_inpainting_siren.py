@@ -14,7 +14,7 @@ from utils import set_logger
 SAMPLING_RATIO = 0.1
 #original 8192
 BATCH_SIZE = 8192
-EPOCHS = 1
+EPOCHS = 100
 LEARNING_RATE = 0.0005
 
 filename = 'celtic_spiral_knot.jpg'
@@ -117,7 +117,6 @@ for epoch in range(EPOCHS):
 
     avg_loss = torch.mean(torch.cat(losses)).item()
     epoch_losses.append([epoch, avg_loss])
-    logging.info("Epoch: {} | Avg. Loss {:.4f}".format(epoch, avg_loss))
 
     if avg_loss < best_loss:
         logging.info('Loss improved from {:.4f} to {:.4f}'.format(

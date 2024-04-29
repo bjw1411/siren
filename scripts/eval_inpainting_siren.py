@@ -1,5 +1,6 @@
 import os
 import glob
+import cv2
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
@@ -88,8 +89,21 @@ predicted_image = torch.cat(predictions).cpu().numpy()
 predicted_image = predicted_image.reshape((rows, cols, channels)) / 255
 predicted_image = predicted_image.clip(0.0, 1.0)
 
-img_save_path = 'images/fat_shiba.jpg'
+temp_array = predicted_image
+temp_array = temp_array * 255
+temp_array = temp_array.astype(np.uint8)
+
+im = Image.fromarray(temp_array)
+im.save('images/Predicted ' + filename + ".png")
+
+img_save_path = 'images/' + filename + " compare.png"
 os.makedirs(os.path.dirname(img_save_path), exist_ok=True)
+
+ground_truth = cv2.imread(img_filepath)
+output = cv2.imread('images/Predicted ' + filename + ".png")
+psnr = cv2.PSNR(ground_truth, output)
+
+print(f"Ground Truth vs Predicted PSNR: {psnr}")
 
 fig, axes = plt.subplots(1, 2)
 plt.sca(axes[0])
@@ -103,3 +117,5 @@ plt.title("Predicted Image")
 fig.tight_layout()
 plt.savefig(img_save_path, bbox_inches='tight')
 plt.show()
+
+
