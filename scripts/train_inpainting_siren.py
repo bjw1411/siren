@@ -11,13 +11,14 @@ from torch.utils.data import TensorDataset, DataLoader
 from siren import SIREN
 from utils import set_logger
 
+#Model Hyper parameters
+#For the experiment we are keeping these constant
 SAMPLING_RATIO = 0.1
-#original 8192
 BATCH_SIZE = 8192
-EPOCHS = 500
+EPOCHS = 5000
 LEARNING_RATE = 0.0005
 
-filename = 'celtic_spiral_knot.jpg'
+filename = 'bread.png'
 
 # Image Reference - http://earthsongtiles.com/celtic_tiles.html
 img_filepath = 'data/' + filename
@@ -55,7 +56,7 @@ train_dataloader = DataLoader(
 layers = [256, 256, 256, 256, 256]
 in_features = 2
 # Ben changed out_features from 3 to 4 don't know why but that fixed it lmao
-out_features = 3
+out_features = 4
 initializer = 'siren'
 w0 = 1.0
 w0_initial = 30.0
@@ -75,8 +76,13 @@ print("Total training steps : ", num_steps)
 #   0.0005, decay_steps=num_steps, end_learning_rate=5e-5, power=2.0)
 # TODO: tensorboard
 
+#learning rate decay rate
+decay_rate = 0.9999
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
+#set up lr scheduler for exponential weight decay
+#learning_rate = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=decay_rate)
 criterion = torch.nn.MSELoss()
 
 checkpoint_dir = 'checkpoints/siren/inpainting/'
@@ -118,6 +124,8 @@ for epoch in range(EPOCHS):
     avg_loss = torch.mean(torch.cat(losses)).item()
     epoch_losses.append([epoch, avg_loss])
 
+    #step lr scheduler
+    #learning_rate.step()
     if avg_loss < best_loss:
         logging.info('Loss improved from {:.4f} to {:.4f}'.format(
             best_loss, avg_loss))

@@ -21,3 +21,4 @@ logs/
 dist/
 build/
 siren_torch.egg-info/
+checkpoints/

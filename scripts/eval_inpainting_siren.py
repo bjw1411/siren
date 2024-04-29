@@ -11,7 +11,7 @@ from siren import SIREN
 
 BATCH_SIZE = 8192
 
-filename = 'celtic_spiral_knot.jpg'
+filename = 'bread.png'
 
 img_filepath = 'data/' + filename
 img_raw = np.array(Image.open(img_filepath))
@@ -35,10 +35,10 @@ def build_eval_tensors():
     img_mask = torch.stack([img_mask_x, img_mask_y], dim=-1)
     img_mask = img_mask.reshape(-1, 2)
     #changed to -1 4 from -1 3
-    img_eval = img_ground_truth.reshape(-1, 3)
+    img_eval = img_ground_truth.reshape(-1, 4)
 
-    # img_mask.to(device="cuda")
-    # img_eval.to(device="cuda")
+    #img_mask.to(device="cuda")
+    #img_eval.to(device="cuda")
     return img_mask, img_eval
 
 
@@ -52,7 +52,7 @@ test_dataloader = DataLoader(
 layers = [256, 256, 256, 256, 256]
 in_features = 2
 # changed from 3 to 4
-out_features = 3
+out_features = 4
 initializer = 'siren'
 w0 = 1.0
 w0_initial = 30.0
